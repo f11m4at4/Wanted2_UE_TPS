@@ -65,9 +65,48 @@ public: // inputs
 	void JumpInput(const struct FInputActionValue& value);
 
 public: // 총
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USkeletalMeshComponent* gunMeshComp;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UStaticMeshComponent* sniperComp;
 
+	// 총쏘기
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	class UInputAction* ia_fire;
+	// 총알공장
+	UPROPERTY(EditDefaultsOnly, Category=Bullet)
+	TSubclassOf<class ABullet> bulletFactory;
+
+	// Object Pool
+	// 몇발
+	UPROPERTY(EditAnywhere, Category=Bullet)
+	int32 bulletPoolSize = 10;
+	// 탄창
+	UPROPERTY()
+	TArray<ABullet*> bulletPool;
+	
+	void FireInput(const struct FInputActionValue& value);
+
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	class UInputAction* ia_grenadeGun;
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	class UInputAction* ia_sniperGun;
+
+	bool bUsingGrenade = false;
+	
+	void ChangeToGrenadeGun(const struct FInputActionValue& value);
+	void ChangeToSniperGun(const struct FInputActionValue& value);
+
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	class UInputAction* ia_sniperMode;
+
+	// 스나이퍼 UI
+	UPROPERTY(EditDefaultsOnly, Category="UI")
+	TSubclassOf<class UUserWidget> sniperUIFactory;
+
+	// UI 인스턴스
+	UPROPERTY()
+	UUserWidget* sniperUI;
+	
+	void SniperModeInput(const struct FInputActionValue& value);
 };

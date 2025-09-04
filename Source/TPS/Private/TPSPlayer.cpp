@@ -3,12 +3,14 @@
 
 #include "TPSPlayer.h"
 
+#include "Bullet.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "TPS.h"
+#include "Blueprint/UserWidget.h"
 
 
 // Sets default values
@@ -76,6 +78,24 @@ void ATPSPlayer::BeginPlay()
 			subsys->AddMappingContext(imc_tps, 0);
 		}
 	}
+
+	// 오브젝트 풀 만들기
+	for (int i=0;i<bulletPoolSize;i++)
+	{
+		// 총알 만들기
+		auto bullet = GetWorld()->SpawnActor<ABullet>(bulletFactory);
+		// 탄창에 넣기
+		bulletPool.Add(bullet);
+		// 총알 비활성화
+		bullet->SetActive(false);
+	}
+
+
+	// UI 생성
+	sniperUI = CreateWidget(GetWorld(), sniperUIFactory);
+	
+	// sniper 활성화
+	ChangeToSniperGun(FInputActionValue());
 }
 
 // Called every frame
@@ -111,6 +131,16 @@ void ATPSPlayer::SetupPlayerInputComponent(
 
 		// 점프
 		playerInput->BindAction(ia_jump, ETriggerEvent::Started, this, &ATPSPlayer::JumpInput);
+		// 총쏘기
+		playerInput->BindAction(ia_fire, ETriggerEvent::Started, this, &ATPSPlayer::FireInput);
+
+		// 총바꾸기
+		playerInput->BindAction(ia_grenadeGun, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToGrenadeGun);
+		playerInput->BindAction(ia_sniperGun, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToSniperGun);
+
+		// 스나이퍼모드 전환
+		playerInput->BindAction(ia_sniperMode, ETriggerEvent::Started, this, &ATPSPlayer::SniperModeInput);
+		playerInput->BindAction(ia_sniperMode, ETriggerEvent::Completed, this, &ATPSPlayer::SniperModeInput);
 
 	}
 }
@@ -137,4 +167,62 @@ void ATPSPlayer::LookUpInput(const struct FInputActionValue& value)
 void ATPSPlayer::JumpInput(const struct FInputActionValue& value)
 {
 	Jump();
+}
+
+void ATPSPlayer::FireInput(const struct FInputActionValue& value)
+{
+	if (bUsingGrenade)
+	{
+		// 총알 만들어서 발사시키기
+		auto firePosition = gunMeshComp->GetSocketTransform(TEXT("FirePosition"));
+
+		// 탄창에서 가져와서 총알 발사하기
+		if (bulletPool.Num() > 0)
+		{
+			auto bullet = bulletPool[0];
+			bullet->SetActorTransform(firePosition);
+			bullet->SetActive(true);
+			// 탄창에서 총알 제거하기
+			bulletPool.RemoveAt(0);
+		}
+	}
+	else
+	{
+		
+	}
+}
+
+void ATPSPlayer::ChangeToGrenadeGun(const struct FInputActionValue& value)
+{
+	bUsingGrenade = true;
+	gunMeshComp->SetVisibility(true);
+	sniperComp->SetVisibility(false);
+}
+
+void ATPSPlayer::ChangeToSniperGun(const struct FInputActionValue& value)
+{
+	bUsingGrenade = false;
+	gunMeshComp->SetVisibility(false);
+	sniperComp->SetVisibility(true);
+}
+
+void ATPSPlayer::SniperModeInput(const struct FInputActionValue& value)
+{
+	// 유탄총이면 동작하지 않는다.
+	if (bUsingGrenade)
+	{
+		return;
+	}
+
+	bool bInput = value.Get<bool>();
+	if (bInput)
+	{
+		sniperUI->AddToViewport();
+		camComp->SetFieldOfView(45);
+	}
+	else
+	{
+		sniperUI->RemoveFromParent();
+		camComp->SetFieldOfView(90);
+	}
 }

@@ -30,4 +30,21 @@ public: // components
 	class UStaticMeshComponent* bodyMesh;
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* moveComp;
+
+	// 일정시간이 흐르면 없애고 싶다.
+	UPROPERTY(EditAnywhere, Category=Settings)
+	float destroyTime = 2;
+	float currentTime = 0;
+
+	UPROPERTY()
+	class ATPSPlayer* player;
+	
+	// 활성화 세팅 함수
+	void SetActive(bool bActive);
+
+	UPROPERTY(EditAnywhere)
+	float speed = 10000;
+
+	// 에디터에서 속성을 수정했을 때, 다른 속성들도 수정할 수 있게 하고 싶다.
+	virtual  void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 };
