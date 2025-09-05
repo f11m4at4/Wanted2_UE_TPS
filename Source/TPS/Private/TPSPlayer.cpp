@@ -11,6 +11,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "TPS.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
 
 
 // Sets default values
@@ -61,6 +63,26 @@ ATPSPlayer::ATPSPlayer()
 		sniperComp->SetRelativeLocation(FVector(-10.000000,20.000000, 110.000000));
 		sniperComp->SetRelativeScale3D(FVector(0.2f));
 	}
+
+	// 총알효과
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> TempEffect(TEXT("'/Game/StarterContent/Particles/P_Explosion.P_Explosion'"));
+	if (TempEffect.Succeeded())
+	{
+		bulletEffect = TempEffect.Object;
+	}
+
+	// UI
+	static ConstructorHelpers::FClassFinder<UUserWidget> tempCrosshair(TEXT("'/Game/UI/WBP_CrosshairUI.WBP_CrosshairUI_C'"));
+	if (tempCrosshair.Succeeded())
+	{
+		crosshairUIFactory = tempCrosshair.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> tempSniperUI(TEXT("'/Game/UI/WBP_SniperUI.WBP_SniperUI_C'"));
+	if (tempSniperUI.Succeeded())
+	{
+		sniperUIFactory = tempSniperUI.Class;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -93,6 +115,9 @@ void ATPSPlayer::BeginPlay()
 
 	// UI 생성
 	sniperUI = CreateWidget(GetWorld(), sniperUIFactory);
+	// crosshair
+	crosshairUI = CreateWidget(GetWorld(), crosshairUIFactory);
+	crosshairUI->AddToViewport();
 	
 	// sniper 활성화
 	ChangeToSniperGun(FInputActionValue());
@@ -188,7 +213,32 @@ void ATPSPlayer::FireInput(const struct FInputActionValue& value)
 	}
 	else
 	{
-		
+		// 스나이퍼건 총발사
+		// 총발사해서 부딪힌 지점에 파편을 튀게 해보자
+		// 필요정보 : 시작점, 끝점.
+		FVector startPos = camComp->GetComponentLocation();
+		FVector endPos = startPos + camComp->GetForwardVector() * 10000;
+
+		// 부딪힌정보 저장할 변수
+		FHitResult hitInfo;
+
+		FCollisionQueryParams param;
+		param.AddIgnoredActor(this);
+		// 가상의 선을 쏜다.
+		bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, param);
+
+		if (bHit)
+		{
+			// 총알 파편효과 재생
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), bulletEffect, hitInfo.Location);
+
+			// 부딪힌녀석이 Simulate Physics 가 활성화 되어 있으면
+			if (hitInfo.GetComponent()->IsSimulatingPhysics())
+			{
+				// -> 날려보내자
+				hitInfo.GetComponent()->AddImpulseAtLocation( camComp->GetForwardVector() * 1000000, hitInfo.Location);
+			}
+		}
 	}
 }
 
@@ -219,10 +269,12 @@ void ATPSPlayer::SniperModeInput(const struct FInputActionValue& value)
 	{
 		sniperUI->AddToViewport();
 		camComp->SetFieldOfView(45);
+		crosshairUI->RemoveFromParent();
 	}
 	else
 	{
 		sniperUI->RemoveFromParent();
 		camComp->SetFieldOfView(90);
+		crosshairUI->AddToViewport();
 	}
 }

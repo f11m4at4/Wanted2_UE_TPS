@@ -84,6 +84,10 @@ public: // 총
 	// 탄창
 	UPROPERTY()
 	TArray<ABullet*> bulletPool;
+
+	// 총알 파편효과(스나이퍼건 쏠때)
+	UPROPERTY(EditDefaultsOnly, Category=Bullet)
+	class UParticleSystem* bulletEffect;
 	
 	void FireInput(const struct FInputActionValue& value);
 
@@ -103,10 +107,17 @@ public: // 총
 	// 스나이퍼 UI
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<class UUserWidget> sniperUIFactory;
-
 	// UI 인스턴스
 	UPROPERTY()
 	UUserWidget* sniperUI;
+
+	// Crosshair UI
+	UPROPERTY(EditDefaultsOnly, Category="UI")
+	TSubclassOf<class UUserWidget> crosshairUIFactory;
+	// UI 인스턴스
+	UPROPERTY()
+	UUserWidget* crosshairUI;
+	
 	
 	void SniperModeInput(const struct FInputActionValue& value);
 };
