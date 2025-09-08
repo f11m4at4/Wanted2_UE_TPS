@@ -61,7 +61,27 @@ public:
 	float attackRange = 205;
 	
 	void MoveState();
+	// 필요속성 : 공격 대기시간
+	UPROPERTY(EditAnywhere, Category=FSM)
+	float attackDelayTime = 2.0f;
+	
 	void AttackState();
+
+	// 피격 대기 시간
+	UPROPERTY(EditAnywhere, Category=FSM)
+	float damageDelayTime = 2.0f;
+	
 	void DamageState();
 	void DieState();
+
+	// 피격시 호출될 이벤트 함수 -> 콜백
+	UPROPERTY(EditDefaultsOnly, Category=FSM)
+	int32 MAX_HP = 3;
+	int32 hp = MAX_HP;
+
+	// 필요속성 : 넉백 파워
+	UPROPERTY(EditAnywhere, Category=FSM)
+	float knockbackPower = 10;
+	FVector knockbackPos;
+	void OnDamageProcess(FVector hitDirection);
 };
