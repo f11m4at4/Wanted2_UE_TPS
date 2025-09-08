@@ -4,7 +4,6 @@
 #include "Enemy.h"
 
 #include "EnemyFSM.h"
-#include "GameFramework/CharacterMovementComponent.h"
 
 
 // Sets default values
@@ -24,9 +23,6 @@ AEnemy::AEnemy()
 		GetMesh()->SetRelativeRotation(FRotator(0.000000,-90,0.000000));
 	}
 
-	// 이동방향으로 회전 속성 설정
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	
 	// fsm
 	fsm = CreateDefaultSubobject<UEnemyFSM>(TEXT("FSM"));
 }

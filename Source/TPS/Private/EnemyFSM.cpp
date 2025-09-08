@@ -7,7 +7,6 @@
 #include "TPS.h"
 #include "TPSPlayer.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 
 
 // Sets default values for this component's properties
@@ -108,82 +107,14 @@ void UEnemyFSM::MoveState()
 	}
 }
 
-// 일정시간에 한번씩 공격하고 싶다.
-// 타겟이 공격범위를 벗어 났다면 상태를 이동으로 전환하고 싶다.
 void UEnemyFSM::AttackState()
 {
-	currentTime += GetWorld()->DeltaTimeSeconds;
-	if (currentTime > attackDelayTime)
-	{
-		currentTime = 0;
-		PRINTLOG(TEXT("Attack!!!"));
-	}
-
-	// 타겟을 바라보게 하자.
-	FVector dir = target->GetActorLocation() - me->GetActorLocation();
-	FRotator rot = UKismetMathLibrary::MakeRotFromZX(me->GetActorUpVector(), dir);
-	me->SetActorRotation(rot);
-	
-	// 거리
-	float distance = FVector::Dist(target->GetActorLocation(), me->GetActorLocation());
-	if (distance > attackRange)
-	{
-		_state = EEnemyState::Move;
-	}
 }
 
-// 일정시간 기다렸다가 상태를 대기로 전환
 void UEnemyFSM::DamageState()
 {
-	currentTime += GetWorld()->DeltaTimeSeconds;
-	if (currentTime > damageDelayTime)
-	{
-		currentTime = 0;
-		_state = EEnemyState::Idle;
-	}
-
-	float percent = GetWorld()->DeltaTimeSeconds * 10;// 얼마나 빨리
-	FVector P = FMath::Lerp(me->GetActorLocation(), knockbackPos, percent);
-	// 원충돌
-	float dist = FVector::Dist(P, me->GetActorLocation());
-	if (dist < 10)
-	{
-		P = me->GetActorLocation();
-	}
-	else
-	{
-		me->SetActorLocation(P, true);
-	}
 }
 
 void UEnemyFSM::DieState()
 {
-}
-
-void UEnemyFSM::OnDamageProcess(FVector hitDirection)
-{
-	// 체력
-	hp--;
-
-	// 경과시간 초기화
-	currentTime = 0;
-	
-	// 체력이 남아있으면 피격상태
-	if (hp > 0)
-	{
-		_state = EEnemyState::Damage;
-
-		// 넉백 처리
-		// P = P0 + v
-		hitDirection.Z = 0;
-		FVector force = hitDirection * knockbackPower;
-		knockbackPos = me->GetActorLocation() + force;
-
-	}
-	// 그렇지 않으면 죽음
-	else
-	{
-		_state = EEnemyState::Die;
-		me->Destroy();
-	}
 }
