@@ -156,8 +156,15 @@ void UEnemyFSM::DamageState()
 	}
 }
 
+// 아래로 사라지도록 하고 싶다.
+// 안보이면 제거하고 싶다.
 void UEnemyFSM::DieState()
 {
+	me->SetActorEnableCollision(false);
+	me->SetActorLocation(me->GetActorLocation() + (-me->GetActorUpVector() * 100 * GetWorld()->DeltaTimeSeconds));
+	
+	if (me->GetActorLocation().Z < -80)
+		me->Destroy();
 }
 
 void UEnemyFSM::OnDamageProcess(FVector hitDirection)
@@ -184,6 +191,5 @@ void UEnemyFSM::OnDamageProcess(FVector hitDirection)
 	else
 	{
 		_state = EEnemyState::Die;
-		me->Destroy();
 	}
 }
