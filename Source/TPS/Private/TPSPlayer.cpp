@@ -12,6 +12,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "TPS.h"
 #include "Blueprint/UserWidget.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 
@@ -122,6 +123,9 @@ void ATPSPlayer::BeginPlay()
 	
 	// sniper 활성화
 	ChangeToSniperGun(FInputActionValue());
+
+	// 이동속도 초기화
+	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
 }
 
 // Called every frame
@@ -150,6 +154,9 @@ void ATPSPlayer::SetupPlayerInputComponent(
 	if (playerInput)
 	{
 		playerInput->BindAction(ia_move, ETriggerEvent::Triggered, this, &ATPSPlayer::MoveInput);
+		
+		playerInput->BindAction(ia_run, ETriggerEvent::Started, this, &ATPSPlayer::RunInput);
+		playerInput->BindAction(ia_run, ETriggerEvent::Completed, this, &ATPSPlayer::RunInput);
 
 		// 회전
 		playerInput->BindAction(ia_turn, ETriggerEvent::Triggered, this, &ATPSPlayer::TurnInput);
@@ -176,6 +183,19 @@ void ATPSPlayer::MoveInput(const struct FInputActionValue& value)
 	FVector2d v = value.Get<FVector2d>();
 	direction.X = v.X;
 	direction.Y = v.Y;
+}
+
+void ATPSPlayer::RunInput(const struct FInputActionValue& value)
+{
+	bool isPressed = value.Get<bool>();
+	if (isPressed)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = runSpeed;
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
+	}
 }
 
 void ATPSPlayer::TurnInput(const struct FInputActionValue& value)

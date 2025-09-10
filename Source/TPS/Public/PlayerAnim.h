@@ -17,6 +17,11 @@ class TPS_API UPlayerAnim : public UAnimInstance
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=PlayerAnim)
 	float speed = 0;
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=PlayerAnim)
+	float direction = 0;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=PlayerAnim)
+	bool isInAir = false;
+	
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 };

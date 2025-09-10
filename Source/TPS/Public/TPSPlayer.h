@@ -40,14 +40,20 @@ public: // inputs
 	// 이동
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	class UInputAction* ia_move;
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	class UInputAction* ia_run;
 	
 	// 방향, 속도
 	UPROPERTY(EditAnywhere, Category=Settings)
-	float speed = 500;
+	float walkSpeed = 200;
+	UPROPERTY(EditAnywhere, Category=Settings)
+	float runSpeed = 600;
+	
 	FVector direction = FVector::ZeroVector;
 	
 	// 이동처리
 	void MoveInput(const struct FInputActionValue& value);
+	void RunInput(const struct FInputActionValue& value);
 
 	////////////// 회전
 	UPROPERTY(EditDefaultsOnly, Category="Input")
