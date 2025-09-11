@@ -126,4 +126,25 @@ public: // 총
 	
 	
 	void SniperModeInput(const struct FInputActionValue& value);
+
+
+
+public: // 카메라셰이크
+	UPROPERTY(EditDefaultsOnly, Category=CameraMotion)
+	TSubclassOf<class UCameraShakeBase> fireCameraShake;
+
+public: // Sound 재생
+	UPROPERTY(EditDefaultsOnly, Category=Fire)
+	class USoundBase* fireSound;	
 };
+
+
+
+
+
+
+
+
+
+
+

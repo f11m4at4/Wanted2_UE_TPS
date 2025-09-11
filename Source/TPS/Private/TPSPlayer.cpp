@@ -10,11 +10,14 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "PlayerAnim.h"
 #include "TPS.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
 
 
 // Sets default values
@@ -33,6 +36,14 @@ ATPSPlayer::ATPSPlayer()
 		// 3. 위치 설정, 회전 설정 하고 싶다.
 		GetMesh()->SetRelativeLocation(FVector(0.000000,0.000000,-87.000000));
 		GetMesh()->SetRelativeRotation(FRotator(0.000000,-90,0.000000));
+
+		// Anim Blueprint Assign
+		// static ConstructorHelpers::FClassFinder<UPlayerAnim> TempAnimBP(TEXT("'/Game/Blueprints/ABP_Player.ABP_Player_C'"));
+		// if (TempAnimBP.Succeeded())
+		// {
+		// 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+		// 	GetMesh()->SetAnimInstanceClass(TempAnimBP.Class);
+		// }
 	}
 
 	// SringArm component 붙이기
@@ -47,23 +58,25 @@ ATPSPlayer::ATPSPlayer()
 	JumpMaxCount = 2;
 
 	gunMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("gunMeshComp"));
-	gunMeshComp->SetupAttachment(GetMesh());
+	gunMeshComp->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> TempGun(TEXT("/Script/Engine.SkeletalMesh'/Game/FPWeapon/Mesh/SK_FPGun.SK_FPGun'"));
 	if (TempGun.Succeeded())
 	{
 		gunMeshComp->SetSkeletalMesh(TempGun.Object);
-		gunMeshComp->SetRelativeLocation(FVector(-10.000000,0.000000,110.000000));
+		gunMeshComp->SetRelativeLocation(FVector(-3.744689,6.193350,-0.488459));
+		gunMeshComp->SetRelativeRotation(FRotator(20.881624,95.330790,-2.488091));
 	}
 
 	sniperComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("sniperComp"));
-	sniperComp->SetupAttachment(GetMesh());
+	sniperComp->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 	ConstructorHelpers::FObjectFinder<UStaticMesh> TempSniperGun(TEXT("/Script/Engine.StaticMesh'/Game/SniperGun/sniper11.sniper11'"));
 	if (TempSniperGun.Succeeded())
 	{
 		sniperComp->SetStaticMesh(TempSniperGun.Object);
-		sniperComp->SetRelativeLocation(FVector(-10.000000,20.000000, 110.000000));
-		sniperComp->SetRelativeScale3D(FVector(0.2f));
+		sniperComp->SetRelativeLocation(FVector(-32.582719,-2.353971,4.157812));
+		sniperComp->SetRelativeRotation(FRotator(19.983734,99.443404,-2.149859));
+		sniperComp->SetRelativeScale3D(FVector(0.14f));
 	}
 
 	// 총알효과
@@ -71,6 +84,13 @@ ATPSPlayer::ATPSPlayer()
 	if (TempEffect.Succeeded())
 	{
 		bulletEffect = TempEffect.Object;
+	}
+	
+	// 발사 사운드
+	static ConstructorHelpers::FObjectFinder<USoundBase> TempFireSound(TEXT("/Script/Engine.SoundWave'/Game/SniperGun/Rifle.Rifle'"));
+	if (TempFireSound.Succeeded())
+	{
+		fireSound = TempFireSound.Object;
 	}
 
 	// UI
@@ -84,6 +104,66 @@ ATPSPlayer::ATPSPlayer()
 	if (tempSniperUI.Succeeded())
 	{
 		sniperUIFactory = tempSniperUI.Class;
+	}
+
+	//  카메라셰이크
+	static ConstructorHelpers::FClassFinder<UCameraShakeBase> tempCS(TEXT("'/Game/Blueprints/BP_FireCameraShake.BP_FireCameraShake_C'"));
+	if (tempCS.Succeeded())
+	{
+		fireCameraShake = tempCS.Class;
+	}
+
+
+	// /////////////////////////// 입력 ///////////////////////////
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext> TempIMC(TEXT("InputMappingContext'/Game/TPSInput/IMC_TPS.IMC_TPS'"));
+	if (TempIMC.Succeeded())
+	{
+		imc_tps = TempIMC.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputMove(TEXT("'/Game/TPSInput/IA_TPSMove.IA_TPSMove'"));
+	if (TempInputMove.Succeeded())
+	{
+		ia_move = TempInputMove.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputRun(TEXT("'/Game/TPSInput/IA_TPSRun.IA_TPSRun'"));
+	if (TempInputRun.Succeeded())
+	{
+		ia_run = TempInputRun.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputTurn(TEXT("'/Game/TPSInput/IA_TPSTurn.IA_TPSTurn'"));
+	if (TempInputTurn.Succeeded())
+	{
+		ia_turn = TempInputTurn.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputLook(TEXT("'/Game/TPSInput/IA_TPSLookup.IA_TPSLookup'"));
+	if (TempInputLook.Succeeded())
+	{
+		ia_lookUp = TempInputLook.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputJump(TEXT("'/Game/TPSInput/IA_TPSJump.IA_TPSJump'"));
+	if (TempInputJump.Succeeded())
+	{
+		ia_jump = TempInputJump.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputFire(TEXT("'/Game/TPSInput/IA_TPSFire.IA_TPSFire'"));
+	if (TempInputFire.Succeeded())
+	{
+		ia_fire = TempInputFire.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputGrenadeGun(TEXT("'/Game/TPSInput/IA_TPSGrenadeGun.IA_TPSGrenadeGun'"));
+	if (TempInputGrenadeGun.Succeeded())
+	{
+		ia_grenadeGun = TempInputGrenadeGun.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputSniperGun(TEXT("'/Game/TPSInput/IA_TPSSniperGun.IA_TPSSniperGun'"));
+	if (TempInputSniperGun.Succeeded())
+	{
+		ia_sniperGun = TempInputSniperGun.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> TempInputSniper(TEXT("'/Game/TPSInput/IA_TPSSniper.IA_TPSSniper'"));
+	if (TempInputSniper.Succeeded())
+	{
+		ia_sniperMode = TempInputSniper.Object;
 	}
 }
 
@@ -217,6 +297,20 @@ void ATPSPlayer::JumpInput(const struct FInputActionValue& value)
 
 void ATPSPlayer::FireInput(const struct FInputActionValue& value)
 {
+	// 총발사 애니메이션 재생
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	if (anim)
+	{
+		anim->PlayAttackAnimation();
+	}
+
+	// 카메라 셰이크 재생
+	auto controller = GetWorld()->GetFirstPlayerController();
+	controller->PlayerCameraManager->StartCameraShake(fireCameraShake);
+
+	// 총발사 사운드 재생
+	UGameplayStatics::PlaySound2D(GetWorld(), fireSound);
+	
 	if (bUsingGrenade)
 	{
 		// 총알 만들어서 발사시키기

@@ -5,6 +5,15 @@
 #include "TPSPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+UPlayerAnim::UPlayerAnim()
+{
+	ConstructorHelpers::FObjectFinder<UAnimMontage> tempFire(TEXT("/Script/Engine.AnimMontage'/Game/Animations/My_Fire_Rifle_Ironsights_Montage.My_Fire_Rifle_Ironsights_Montage'"));
+	if (tempFire.Succeeded())
+	{
+		attackMontage = tempFire.Object;
+	}
+}
+
 void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
@@ -25,3 +34,16 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		isInAir = cmp->IsFalling();
 	}
 }
+
+void UPlayerAnim::PlayAttackAnimation()
+{
+	Montage_Play(attackMontage);
+}
+
+
+
+
+
+
+
+
