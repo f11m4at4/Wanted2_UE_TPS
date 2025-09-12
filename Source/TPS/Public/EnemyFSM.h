@@ -84,4 +84,11 @@ public:
 	float knockbackPower = 10;
 	FVector knockbackPos;
 	void OnDamageProcess(FVector hitDirection);
+
+	// 사용중인 애니메이션 블루프린트
+	UPROPERTY()
+	class UEnemyAnim* anim;
+
+	// 아래로 내려가도 되면
+	bool bDieProcessing = false;
 };

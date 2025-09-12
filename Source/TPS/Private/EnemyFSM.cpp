@@ -4,6 +4,7 @@
 #include "EnemyFSM.h"
 
 #include "Enemy.h"
+#include "EnemyAnim.h"
 #include "TPS.h"
 #include "TPSPlayer.h"
 #include "Kismet/GameplayStatics.h"
@@ -30,6 +31,9 @@ void UEnemyFSM::BeginPlay()
 	me = Cast<AEnemy>(GetOwner());
 	// 타겟 찾기
 	target = Cast<ATPSPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATPSPlayer::StaticClass()));
+
+	// 애니메이션 블루프린트
+	anim = Cast<UEnemyAnim>(me->GetMesh()->GetAnimInstance());
 }
 
 
@@ -77,6 +81,8 @@ void UEnemyFSM::IdleState()
 		// 3. 상태를 이동으로 전환한다.
 		_state = EEnemyState::Move;
 		currentTime = 0;
+		// 4. 애니메이션 상태도 업데이트
+		anim->_state = _state;
 	}
 }
 
@@ -105,6 +111,8 @@ void UEnemyFSM::MoveState()
 	{
 		// 3. 상태를 공격으로 전환
 		_state = EEnemyState::Attack;
+		anim->_state = _state;
+		currentTime = attackDelayTime;
 	}
 }
 
@@ -112,11 +120,15 @@ void UEnemyFSM::MoveState()
 // 타겟이 공격범위를 벗어 났다면 상태를 이동으로 전환하고 싶다.
 void UEnemyFSM::AttackState()
 {
+	// 시간이 흘러야한다. -> 공격대기시간 만큼 기다린다.
 	currentTime += GetWorld()->DeltaTimeSeconds;
+	
 	if (currentTime > attackDelayTime)
 	{
+		// 공격
 		currentTime = 0;
 		PRINTLOG(TEXT("Attack!!!"));
+		anim->bAttackPlay = true;
 	}
 
 	// 타겟을 바라보게 하자.
@@ -129,6 +141,7 @@ void UEnemyFSM::AttackState()
 	if (distance > attackRange)
 	{
 		_state = EEnemyState::Move;
+		anim->_state = _state;
 	}
 }
 
@@ -140,6 +153,7 @@ void UEnemyFSM::DamageState()
 	{
 		currentTime = 0;
 		_state = EEnemyState::Idle;
+		anim->_state = _state;
 	}
 
 	float percent = GetWorld()->DeltaTimeSeconds * 10;// 얼마나 빨리
@@ -156,10 +170,15 @@ void UEnemyFSM::DamageState()
 	}
 }
 
+// 아래로 내려가도 되면
 // 아래로 사라지도록 하고 싶다.
 // 안보이면 제거하고 싶다.
 void UEnemyFSM::DieState()
 {
+	if (bDieProcessing == false)
+	{
+		return;
+	}
 	me->SetActorEnableCollision(false);
 	me->SetActorLocation(me->GetActorLocation() + (-me->GetActorUpVector() * 100 * GetWorld()->DeltaTimeSeconds));
 	
@@ -180,6 +199,11 @@ void UEnemyFSM::OnDamageProcess(FVector hitDirection)
 	{
 		_state = EEnemyState::Damage;
 
+		// 피격 애니메이션 재생
+		int index = FMath::RandRange(0, 1);
+		FName sectionName(FString::Printf(TEXT("Damage%d"), index));
+		anim->PlayDamageAnim(sectionName);
+		
 		// 넉백 처리
 		// P = P0 + v
 		hitDirection.Z = 0;
@@ -191,5 +215,8 @@ void UEnemyFSM::OnDamageProcess(FVector hitDirection)
 	else
 	{
 		_state = EEnemyState::Die;
+		anim->PlayDamageAnim(TEXT("Die"));
 	}
+
+	anim->_state = _state;
 }
