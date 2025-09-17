@@ -37,7 +37,7 @@ public: // components
 	float currentTime = 0;
 
 	UPROPERTY()
-	class ATPSPlayer* player;
+	class UPlayerFire* player;
 	
 	// 활성화 세팅 함수
 	void SetActive(bool bActive);

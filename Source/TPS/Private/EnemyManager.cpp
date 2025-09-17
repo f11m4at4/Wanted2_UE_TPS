@@ -45,7 +45,7 @@ void AEnemyManager::FindSpawnPoints()
 	for (auto spawn: spawnPoints)
 	{
 		// 이름이 spawnpoint 녀석을 배열에 추가
-		if (spawn->GetActorNameOrLabel().Contains(TEXT("BP_SpawnPoint")))
+		if (spawn->GetName().Contains(TEXT("BP_SpawnPoint")))
 		{
 			spawnPoints.Add(spawn);
 		}

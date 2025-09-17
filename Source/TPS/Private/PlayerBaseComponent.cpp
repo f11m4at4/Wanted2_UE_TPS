@@ -3,6 +3,8 @@
 
 #include "PlayerBaseComponent.h"
 
+#include "TPS.h"
+
 
 // Sets default values for this component's properties
 UPlayerBaseComponent::UPlayerBaseComponent()
@@ -22,6 +24,13 @@ void UPlayerBaseComponent::BeginPlay()
 
 	// 소유자 액터
 	me = Cast<ATPSPlayer>(GetOwner());
-	
+	PRINTINFO();
+
+}
+
+void UPlayerBaseComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	PRINTINFO();
 }
 

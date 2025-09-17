@@ -3,6 +3,7 @@
 
 #include "Bullet.h"
 
+#include "PlayerFire.h"
 #include "TPS.h"
 #include "TPSPlayer.h"
 #include "Components/SphereComponent.h"
@@ -41,8 +42,8 @@ void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
 
-	player = Cast<ATPSPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATPSPlayer::StaticClass()));
-	
+	auto playerMain = Cast<ATPSPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATPSPlayer::StaticClass()));
+	player = Cast<UPlayerFire>(playerMain->playerFire);
 }
 
 // Called every frame
