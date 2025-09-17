@@ -91,4 +91,16 @@ public:
 
 	// 아래로 내려가도 되면
 	bool bDieProcessing = false;
+
+	// Enemy를 소유하고 있는 Ai Controller
+	UPROPERTY()
+	class AAIController* ai;
+
+	// Navigation 영역 안에서 랜덤한 위치 찾아오기
+	// 랜덤 위치
+	FVector randomPos;
+	// 랜덤 위치 찾는 함수
+	// -> 기준점, 길이, 목적지
+	// -> bool 반환 (찾았는지 여부)
+	bool GetRandomPositionInNavMesh(const FVector& centerPos, const float radius, FVector& dest);
 };

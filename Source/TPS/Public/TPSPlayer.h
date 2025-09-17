@@ -36,39 +36,6 @@ public: // components
 public: // inputs
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	class UInputMappingContext* imc_tps;
-	
-	// 이동
-	UPROPERTY(EditDefaultsOnly, Category="Input")
-	class UInputAction* ia_move;
-	UPROPERTY(EditDefaultsOnly, Category="Input")
-	class UInputAction* ia_run;
-	
-	// 방향, 속도
-	UPROPERTY(EditAnywhere, Category=Settings)
-	float walkSpeed = 200;
-	UPROPERTY(EditAnywhere, Category=Settings)
-	float runSpeed = 600;
-	
-	FVector direction = FVector::ZeroVector;
-	
-	// 이동처리
-	void MoveInput(const struct FInputActionValue& value);
-	void RunInput(const struct FInputActionValue& value);
-
-	////////////// 회전
-	UPROPERTY(EditDefaultsOnly, Category="Input")
-	class UInputAction* ia_turn;
-	UPROPERTY(EditDefaultsOnly, Category="Input")
-	class UInputAction* ia_lookUp;
-
-	void TurnInput(const struct FInputActionValue& value);
-	void LookUpInput(const struct FInputActionValue& value);
-
-	///////////// 점프 //////////////
-	UPROPERTY(EditDefaultsOnly, Category="Input")
-	class UInputAction* ia_jump;
-	
-	void JumpInput(const struct FInputActionValue& value);
 
 public: // 총
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -135,7 +102,13 @@ public: // 카메라셰이크
 
 public: // Sound 재생
 	UPROPERTY(EditDefaultsOnly, Category=Fire)
-	class USoundBase* fireSound;	
+	class USoundBase* fireSound;
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class UPlayerBaseComponent* playerMove;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class UPlayerBaseComponent* playerFire;
 };
 
 

@@ -25,7 +25,7 @@ ABullet::ABullet()
 	bodyMesh->SetupAttachment(collisionComp);
 	bodyMesh->SetRelativeScale3D(FVector(0.62f));
 	
-	moveComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("moveComp"));
+	moveComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("playerMove"));
 	moveComp->InitialSpeed = speed;
 	moveComp->MaxSpeed = speed;
 	moveComp->bShouldBounce = true;

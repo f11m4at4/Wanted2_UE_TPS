@@ -3,12 +3,16 @@
 
 #include "EnemyFSM.h"
 
+#include "AIController.h"
 #include "Enemy.h"
 #include "EnemyAnim.h"
+#include "NavigationSystem.h"
 #include "TPS.h"
 #include "TPSPlayer.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Navigation/PathFollowingComponent.h"
 
 
 // Sets default values for this component's properties
@@ -34,6 +38,9 @@ void UEnemyFSM::BeginPlay()
 
 	// 애니메이션 블루프린트
 	anim = Cast<UEnemyAnim>(me->GetMesh()->GetAnimInstance());
+
+	// ai controller 할당
+	ai = Cast<AAIController>(me->GetController());
 }
 
 
@@ -83,6 +90,9 @@ void UEnemyFSM::IdleState()
 		currentTime = 0;
 		// 4. 애니메이션 상태도 업데이트
 		anim->_state = _state;
+
+		// 랜덤위치 설정
+		GetRandomPositionInNavMesh(me->GetActorLocation(), 500, randomPos);
 	}
 }
 
@@ -103,8 +113,39 @@ void UEnemyFSM::MoveState()
 	float distance = direction.Size();
 	direction.Normalize();
 
-	me->AddMovementInput(direction);
+	//me->AddMovementInput(direction);
+	// 
 
+	// 목적지(타겟)까지 갈 수 있나?
+	auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+
+	// 길찾기 쿼리 생성
+	FAIMoveRequest req;
+	FPathFindingQuery query;
+
+	req.SetAcceptanceRadius(3);
+	req.SetGoalLocation(target->GetActorLocation());
+	ai->BuildPathfindingQuery(req, query);
+	// 길을 찾을 수 있다.
+	auto r = ns->FindPathSync(query);
+	// 갈 수 있다면
+	if (r.Result == ENavigationQueryResult::Success)
+	{
+		ai->MoveToLocation(target->GetActorLocation());
+	}
+	// 갈 수 없다면?
+	else
+	{
+		// -> 그냥 랜덤위치 패트롤 돌자.
+		auto result = ai->MoveToLocation(randomPos);
+		// 목적지에 도착하면
+		if (result == EPathFollowingRequestResult::Type::AlreadyAtGoal || result == EPathFollowingRequestResult::Failed)
+		{
+			// -> 랜덤위치 재설정
+			GetRandomPositionInNavMesh(me->GetActorLocation(), 500, randomPos);
+		}
+	}
+	
 	// 타겟이 공격범위 안에 들어오면 상태를 공격으로 전환하고 싶다.
 	// 2. 타겟과의 거리가 공격범위 안에 들어왔으니까.
 	if (distance < attackRange)
@@ -113,7 +154,22 @@ void UEnemyFSM::MoveState()
 		_state = EEnemyState::Attack;
 		anim->_state = _state;
 		currentTime = attackDelayTime;
+
+		ai->StopMovement();
 	}
+}
+
+// 네비게이션 영역안에서 랜덤한 위치 가져오기
+bool UEnemyFSM::GetRandomPositionInNavMesh(const FVector& centerPos,
+	const float radius, FVector& dest)
+{
+	// 1. 네비게이션 시스템이 필요하다.
+	auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	// 2. 랜덤 위치 가져오기
+	FNavLocation loc;
+	bool bResult = ns->GetRandomReachablePointInRadius(centerPos, radius, loc);
+	dest = loc.Location;
+	return bResult;
 }
 
 // 일정시간에 한번씩 공격하고 싶다.
@@ -142,6 +198,8 @@ void UEnemyFSM::AttackState()
 	{
 		_state = EEnemyState::Move;
 		anim->_state = _state;
+
+		GetRandomPositionInNavMesh(me->GetActorLocation(), 500, randomPos);
 	}
 }
 
@@ -156,7 +214,7 @@ void UEnemyFSM::DamageState()
 		anim->_state = _state;
 	}
 
-	float percent = GetWorld()->DeltaTimeSeconds * 10;// 얼마나 빨리
+	float percent = GetWorld()->DeltaTimeSeconds * 7;// 얼마나 빨리
 	FVector P = FMath::Lerp(me->GetActorLocation(), knockbackPos, percent);
 	// 원충돌
 	float dist = FVector::Dist(P, me->GetActorLocation());
@@ -188,6 +246,8 @@ void UEnemyFSM::DieState()
 
 void UEnemyFSM::OnDamageProcess(FVector hitDirection)
 {
+	ai->StopMovement();
+	
 	// 체력
 	hp--;
 
@@ -214,6 +274,8 @@ void UEnemyFSM::OnDamageProcess(FVector hitDirection)
 	// 그렇지 않으면 죽음
 	else
 	{
+		// me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		me->SetActorEnableCollision(false);
 		_state = EEnemyState::Die;
 		anim->PlayDamageAnim(TEXT("Die"));
 	}
