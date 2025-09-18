@@ -89,7 +89,7 @@ ATPSPlayer::ATPSPlayer()
 
 	// PlayerMove
 	playerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PlayerMove"));
-	playerFire = CreateDefaultSubobject<UPlayerFire>(TEXT("PlayerFire"));
+	// playerFire = CreateDefaultSubobject<UPlayerFire>(TEXT("PlayerFire"));
 }
 
 // Called when the game starts or when spawned
@@ -125,7 +125,24 @@ void ATPSPlayer::SetupPlayerInputComponent(
 	auto playerInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	if (playerInput)
 	{
-		playerMove->SetInputBinding(playerInput);
-		playerFire->SetInputBinding(playerInput);
+		onInputBindingDelegate.Broadcast(playerInput);
+		// playerMove->SetInputBinding(playerInput);
+		// playerFire->SetInputBinding(playerInput);
 	}
+}
+
+void ATPSPlayer::OnHitEvent()
+{
+	PRINTLOG(TEXT("Damaged !!!!"));
+	hp--;
+	MakeHPtoPercent();
+	if (hp <= 0)
+	{
+		PRINTLOG(TEXT("Die!!!!! OTL..."));
+	}
+}
+
+void ATPSPlayer::MakeHPtoPercent_Implementation()
+{
+	percent = hp / maxHP;
 }

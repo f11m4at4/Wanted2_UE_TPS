@@ -41,8 +41,9 @@ void AEnemyManager::CreateEnemy()
 
 void AEnemyManager::FindSpawnPoints()
 {
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), spawnPoints);
-	for (auto spawn: spawnPoints)
+	TArray<AActor*> allActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), allActors);
+	for (auto spawn: allActors)
 	{
 		// 이름이 spawnpoint 녀석을 배열에 추가
 		if (spawn->GetName().Contains(TEXT("BP_SpawnPoint")))

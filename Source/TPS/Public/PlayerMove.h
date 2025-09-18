@@ -52,7 +52,6 @@ public:
 	
 	void RunInput(const struct FInputActionValue& value);
 
-
 	////////////// 회전
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	class UInputAction* ia_turn;

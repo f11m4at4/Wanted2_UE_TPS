@@ -13,7 +13,7 @@ UPlayerBaseComponent::UPlayerBaseComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	// ...
+	bWantsInitializeComponent = true;
 }
 
 
@@ -22,15 +22,19 @@ void UPlayerBaseComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 소유자 액터
-	me = Cast<ATPSPlayer>(GetOwner());
-	PRINTINFO();
-
 }
 
 void UPlayerBaseComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
-	PRINTINFO();
+	
+	// 소유자 액터
+	me = Cast<ATPSPlayer>(GetOwner());
+
+	// 델리게이트에 처리 함수 등록
+	if (me)
+	{
+		me->onInputBindingDelegate.AddUObject(this, &UPlayerBaseComponent::SetInputBinding);
+	}
 }
 

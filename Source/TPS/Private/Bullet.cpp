@@ -42,8 +42,8 @@ void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
 
-	auto playerMain = Cast<ATPSPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATPSPlayer::StaticClass()));
-	player = Cast<UPlayerFire>(playerMain->playerFire);
+	// auto playerMain = Cast<ATPSPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATPSPlayer::StaticClass()));
+	// player = Cast<UPlayerFire>(playerMain->playerFire);
 }
 
 // Called every frame

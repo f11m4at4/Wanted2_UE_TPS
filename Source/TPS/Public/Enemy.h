@@ -31,4 +31,8 @@ public:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UEnemyFSM* fsm;
+
+	// 맞았을 때 호출될 이벤트 함수
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void OnHit();
 };

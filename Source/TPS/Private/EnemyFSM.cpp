@@ -10,6 +10,7 @@
 #include "TPS.h"
 #include "TPSPlayer.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Navigation/PathFollowingComponent.h"
@@ -41,6 +42,8 @@ void UEnemyFSM::BeginPlay()
 
 	// ai controller 할당
 	ai = Cast<AAIController>(me->GetController());
+
+	hpUIComp = Cast<UWidgetComponent>(me->GetComponentByClass(UWidgetComponent::StaticClass()));
 }
 
 
@@ -72,6 +75,14 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType,
 	case EEnemyState::Die:
 		DieState();
 		break;
+	}
+
+	// billboarding 처리
+	if (hpUIComp && target)
+	{
+		FVector direction = target->GetActorLocation() - me->GetActorLocation();
+		direction.Z = 0;
+		hpUIComp->SetWorldRotation(direction.Rotation());
 	}
 }
 
@@ -183,7 +194,7 @@ void UEnemyFSM::AttackState()
 	{
 		// 공격
 		currentTime = 0;
-		PRINTLOG(TEXT("Attack!!!"));
+		
 		anim->bAttackPlay = true;
 	}
 
@@ -247,10 +258,12 @@ void UEnemyFSM::DieState()
 void UEnemyFSM::OnDamageProcess(FVector hitDirection)
 {
 	ai->StopMovement();
+
 	
 	// 체력
 	hp--;
 
+	me->OnHit();
 	// 경과시간 초기화
 	currentTime = 0;
 	

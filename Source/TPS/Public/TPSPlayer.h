@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "TPSPlayer.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FInputBindingDelegate, class UEnhancedInputComponent*);
+
 UCLASS()
 class TPS_API ATPSPlayer : public ACharacter
 {
@@ -46,8 +48,29 @@ public: // 총
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UPlayerBaseComponent* playerMove;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	class UPlayerBaseComponent* playerFire;
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	// class UPlayerBaseComponent* playerFire;
+
+public:// 입력 바인딩 델리게이트
+	FInputBindingDelegate onInputBindingDelegate;
+
+
+public:
+	// --------------- 체력 ------------------
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=HP)
+	float maxHP = 3;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=HP)
+	float hp = maxHP;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=HP)
+	float percent = 0;
+	
+	// 적이 야 나너 때렸어.
+	UFUNCTION(BlueprintCallable)
+	void OnHitEvent();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void MakeHPtoPercent();
 };
 
 
