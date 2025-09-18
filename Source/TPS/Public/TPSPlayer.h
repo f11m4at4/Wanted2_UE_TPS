@@ -71,6 +71,10 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void MakeHPtoPercent();
+
+	// 무기교체
+	UFUNCTION(BlueprintImplementableEvent)
+	void ChangeWeapon(bool isGrenade);
 };
 
 

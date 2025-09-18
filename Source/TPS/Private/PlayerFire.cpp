@@ -209,6 +209,8 @@ void UPlayerFire::ChangeToGrenadeGun(const struct FInputActionValue& value)
 	bUsingGrenade = true;
 	gunMeshComp->SetVisibility(true);
 	sniperComp->SetVisibility(false);
+
+	me->ChangeWeapon(bUsingGrenade);
 }
 
 void UPlayerFire::ChangeToSniperGun(const struct FInputActionValue& value)
@@ -216,6 +218,7 @@ void UPlayerFire::ChangeToSniperGun(const struct FInputActionValue& value)
 	bUsingGrenade = false;
 	gunMeshComp->SetVisibility(false);
 	sniperComp->SetVisibility(true);
+	me->ChangeWeapon(bUsingGrenade);
 }
 
 
